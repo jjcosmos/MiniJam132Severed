@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class Character : MonoBehaviour
@@ -13,6 +14,7 @@ public class Character : MonoBehaviour
     [SerializeField] private float _jumpForce = 5f;
     [SerializeField] private float _horizontalForce = 5f;
     [SerializeField] private Animator _animator;
+    [SerializeField] private Transform _groundcastPoint;
 
     private readonly int _bInAirHash = Animator.StringToHash("bInAir");
     private readonly int _bHoldingJump = Animator.StringToHash("bHoldingJump");
@@ -27,12 +29,16 @@ public class Character : MonoBehaviour
     
     private void Update()
     {
-        CheckState();
+        //CheckState();
         MoveFromInput();
         
         _animator.SetBool(_bInAirHash, _inAirThisFrame || _onSlopeThisFrame);
     }
-    
+
+    private void FixedUpdate()
+    {
+        CheckState();
+    }
 
     private void MoveFromInput()
     {
@@ -60,7 +66,7 @@ public class Character : MonoBehaviour
 
     private void CheckState()
     {
-        if (GroundCheck(out var hitInfo))
+        if (_body.velocity.y <= 0 && GroundCheck(out var hitInfo))
         {
             _onSlopeThisFrame = NormalIsSlope(hitInfo.normal);
 
@@ -88,15 +94,25 @@ public class Character : MonoBehaviour
 
     private void OnGUI()
     {
-        GUILayout.Label($"On Slope: {_onSlopeThisFrame}\nIn Air: {_inAirThisFrame}\nCharge: {_jumpCharge}");
+        //GUILayout.Label($"On Slope: {_onSlopeThisFrame}\nIn Air: {_inAirThisFrame}\nCharge: {_jumpCharge}");
     }
 
+    private const float BoxCastHeight = 0.05f;
     private bool GroundCheck(out RaycastHit hitInfo)
     {
-        return Physics.BoxCast(transform.position + new Vector3(0, 0.01f, 0), Vector3.one * (.5f * _groundCastWidth),
+        return Physics.BoxCast(_groundcastPoint.position + new Vector3(0f, BoxCastHeight / 2f, 0), new Vector3(.5f * _groundCastWidth, BoxCastHeight / 2f, 0.5f),
             Vector3.down, out hitInfo, Quaternion.identity,
             _groundCastRange,
             _groundMask);
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireCube(_groundcastPoint.position + new Vector3(0f, BoxCastHeight / 2f, 0), new Vector3( _groundCastWidth, BoxCastHeight, 0.5f) );
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireCube(_groundcastPoint.position + new Vector3(0f, BoxCastHeight / 2f, 0) + Vector3.down * _groundCastRange, new Vector3(_groundCastWidth, BoxCastHeight, 0.5f));
+        Gizmos.color = Color.white;
     }
 
     private void OnCollisionEnter(Collision collision)
