@@ -55,8 +55,8 @@ public class Character : MonoBehaviour
             _animator.SetBool(_bHoldingJump, false);
         }
 
-        var hAxis = Input.GetAxisRaw("Horizontal");
-        _interpolatedDirection = Mathf.MoveTowards(_interpolatedDirection, Mathf.RoundToInt(hAxis), Time.deltaTime * 10f);
+        var hAxis = Input.GetAxis("Horizontal");
+        _interpolatedDirection = Mathf.MoveTowards(_interpolatedDirection, Mathf.RoundToInt(Input.GetAxisRaw("Horizontal")), Time.deltaTime * 10f);
         _animator.SetFloat(_lookBlend, (_interpolatedDirection + 1f) /2f);
 
         if (!_inAirThisFrame && !_onSlopeThisFrame && Input.GetButtonUp("Jump"))
@@ -69,6 +69,7 @@ public class Character : MonoBehaviour
 
     private void CheckState()
     {
+        var wasOnSlope = _onSlopeThisFrame;
         if (_body.velocity.y <= 0 && GroundCheck(out var hitInfo))
         {
             _onSlopeThisFrame = NormalIsSlope(hitInfo.normal);
@@ -93,6 +94,10 @@ public class Character : MonoBehaviour
         };
 
         _fullyGrounded = !_onSlopeThisFrame && !_inAirThisFrame;
+        if (!wasOnSlope && _onSlopeThisFrame)
+        {
+            _body.velocity = Vector3.zero;
+        }
     }
 
     private void OnGUI()
@@ -145,7 +150,7 @@ public class Character : MonoBehaviour
     {
         var isGround = _groundMask == (_groundMask | (1 << collision.gameObject.layer));
 
-        var grounded = GroundCheck(out var hit);
+        var grounded = GroundCheck(out _);
         var onFlatGround = AnyIsFlat(collision.contacts, collision.contactCount);
         if (collision.relativeVelocity.y > 0f && (isGround || grounded) && onFlatGround)
         {

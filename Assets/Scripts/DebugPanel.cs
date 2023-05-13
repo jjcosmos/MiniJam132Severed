@@ -19,7 +19,7 @@ namespace DefaultNamespace
 
         private void OnGUI()
         {
-            _stringToEdit = GUILayout.TextField(_stringToEdit, 10);
+            _stringToEdit = GUILayout.TextField(_stringToEdit, 32);
             if (GUILayout.Button("GoTo"))
             {
                 var found = _checkPoints.FirstOrDefault(c => c.Id == _stringToEdit);
