@@ -27,7 +27,21 @@ public class Character : MonoBehaviour
     private bool _onSlopeThisFrame;
     private bool _inAirThisFrame;
     private bool _fullyGrounded;
+
+    public Rigidbody Body => _body;
+    public bool CanMove { get; private set; } = false;
+
+    private void Start()
+    {
+        _body.isKinematic = true;
+        _body.isKinematic = false;
+    }
     
+    public void SetCanMove(bool canMove)
+    {
+        CanMove = canMove;
+    }
+
     private void Update()
     {
         //CheckState();
@@ -41,9 +55,15 @@ public class Character : MonoBehaviour
         CheckState();
     }
 
-    private float _interpolatedDirection = 0f;
+    private float _interpolatedDirection = 1f;
     private void MoveFromInput()
     {
+        if (!CanMove)
+        {
+            _animator.SetFloat(_lookBlend, (_interpolatedDirection + 1f) /2f);
+            return;
+        }
+        
         if (Input.GetButton("Jump") && !_inAirThisFrame && !_onSlopeThisFrame)
         {
             _jumpCharge += Time.deltaTime * _jumpChargeSpeed;

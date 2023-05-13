@@ -13,7 +13,7 @@ TagManager:
   - UI
   - Ground
   - NoPointLight
-  - 
+  - Cards
   - 
   - 
   - 
@@ -40,4 +40,7 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Hud
+    uniqueID: 2729251465
     locked: 0
