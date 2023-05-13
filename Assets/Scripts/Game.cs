@@ -1,10 +1,14 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Playables;
+using UnityEngine.SceneManagement;
 
 public class Game : MonoBehaviour
 {
     [SerializeField] private Animator _zoneTextAnimator;
     [SerializeField] private TMP_Text _zoneText;
+    [SerializeField] private PlayableDirector _endPlayable;
     
     private Character _character;
     private NamedZone _currentZone;
@@ -36,11 +40,24 @@ public class Game : MonoBehaviour
         _queuedZone = zone;
     }
 
-    public void EnteredEndZone(int id)
+    public void NotifyEnd()
     {
-        _character.SetCanMove(false);
+        StartCoroutine(EndRoutine());
     }
-    
+
+    private IEnumerator EndRoutine()
+    {
+        _endPlayable.Play();
+        var duration = _endPlayable.duration;
+        while (duration > 0f)
+        {
+            duration -= Time.deltaTime;
+            yield return null;
+        }
+
+        SceneManager.LoadScene("MainMenu");
+    }
+
     private void CheckZoneChange()
     {
         // Only show zone change when player stops moving
