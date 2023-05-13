@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 public class Character : MonoBehaviour
@@ -40,6 +41,7 @@ public class Character : MonoBehaviour
         CheckState();
     }
 
+    private float _interpolatedDirection = 0f;
     private void MoveFromInput()
     {
         if (Input.GetButton("Jump") && !_inAirThisFrame && !_onSlopeThisFrame)
@@ -53,9 +55,10 @@ public class Character : MonoBehaviour
             _animator.SetBool(_bHoldingJump, false);
         }
 
-        var hAxis = Input.GetAxis("Horizontal");
-        _animator.SetFloat(_lookBlend, (hAxis + 1f) /2f);
-        
+        var hAxis = Input.GetAxisRaw("Horizontal");
+        _interpolatedDirection = Mathf.MoveTowards(_interpolatedDirection, Mathf.RoundToInt(hAxis), Time.deltaTime * 10f);
+        _animator.SetFloat(_lookBlend, (_interpolatedDirection + 1f) /2f);
+
         if (!_inAirThisFrame && !_onSlopeThisFrame && Input.GetButtonUp("Jump"))
         {
             var dirVec = new Vector3( Mathf.Clamp(Mathf.RoundToInt(hAxis), -1f, 1f), 0, 0);
@@ -97,33 +100,65 @@ public class Character : MonoBehaviour
         //GUILayout.Label($"On Slope: {_onSlopeThisFrame}\nIn Air: {_inAirThisFrame}\nCharge: {_jumpCharge}");
     }
 
-    private const float BoxCastHeight = 0.05f;
+    private const float BoxCastHeight = 0.09f;
     private bool GroundCheck(out RaycastHit hitInfo)
     {
-        return Physics.BoxCast(_groundcastPoint.position + new Vector3(0f, BoxCastHeight / 2f, 0), new Vector3(.5f * _groundCastWidth, BoxCastHeight / 2f, 0.5f),
-            Vector3.down, out hitInfo, Quaternion.identity,
-            _groundCastRange,
-            _groundMask);
+        var midPoint = _groundcastPoint.position + new Vector3(0f, BoxCastHeight / 2f, 0);
+        //return Physics.BoxCast(midPoint, new Vector3(.5f * _groundCastWidth, BoxCastHeight / 2f, 0.5f),
+        //    Vector3.down, out hitInfo, Quaternion.identity,
+        //    _groundCastRange,
+        //    _groundMask);
+        Span<Vector3> casts = stackalloc Vector3[]{midPoint, midPoint + Vector3.right * (_groundCastWidth * 0.5f),  midPoint - Vector3.right * (_groundCastWidth * 0.5f)};
+        foreach (var t in casts)
+        {
+            if (Physics.Raycast(t, Vector3.down, out hitInfo, _groundCastRange, _groundMask))
+            {
+                return true;
+            }
+        }
+
+        hitInfo = new RaycastHit();
+        return false;
     }
 
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
-        Gizmos.DrawWireCube(_groundcastPoint.position + new Vector3(0f, BoxCastHeight / 2f, 0), new Vector3( _groundCastWidth, BoxCastHeight, 0.5f) );
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireCube(_groundcastPoint.position + new Vector3(0f, BoxCastHeight / 2f, 0) + Vector3.down * _groundCastRange, new Vector3(_groundCastWidth, BoxCastHeight, 0.5f));
-        Gizmos.color = Color.white;
+        //Gizmos.DrawWireCube(_groundcastPoint.position + new Vector3(0f, BoxCastHeight / 2f, 0), new Vector3( _groundCastWidth, BoxCastHeight, 0.5f) );
+        //Gizmos.color = Color.red;
+        //Gizmos.DrawWireCube(_groundcastPoint.position + new Vector3(0f, BoxCastHeight / 2f, 0) + Vector3.down * _groundCastRange, new Vector3(_groundCastWidth, BoxCastHeight, 0.5f));
+        //Gizmos.color = Color.white;
+        
+        var midPoint = _groundcastPoint.position + new Vector3(0f, BoxCastHeight / 2f, 0);
+        //return Physics.BoxCast(midPoint, new Vector3(.5f * _groundCastWidth, BoxCastHeight / 2f, 0.5f),
+        //    Vector3.down, out hitInfo, Quaternion.identity,
+        //    _groundCastRange,
+        //    _groundMask);
+        Span<Vector3> casts = stackalloc Vector3[]{midPoint, midPoint + Vector3.right * (_groundCastWidth * 0.5f),  midPoint - Vector3.right * (_groundCastWidth * 0.5f)};
+        foreach (var t in casts)
+        {
+            Gizmos.DrawLine(t, t + Vector3.down * _groundCastRange);
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.relativeVelocity.y > 0f && GroundCheck(out _) && AnyIsFlat(collision.contacts, collision.contactCount))
+        var isGround = _groundMask == (_groundMask | (1 << collision.gameObject.layer));
+
+        var grounded = GroundCheck(out var hit);
+        var onFlatGround = AnyIsFlat(collision.contacts, collision.contactCount);
+        if (collision.relativeVelocity.y > 0f && (isGround || grounded) && onFlatGround)
         {
             _body.velocity = Vector3.zero;
         }
         else if (collision.relativeVelocity.y < 0f)
         {
             //_body.velocity = Vector3.Scale(new Vector3(1f, 0f, 1f), _body.velocity);
+        }
+        else
+        {
+            //Debug.Log($"Failed to resolve, Grounded: {isGround} Flat: {onFlatGround} RelVel {collision.relativeVelocity.y}");
+            //Debug.Break();
         }
     }
 
