@@ -18,8 +18,8 @@ public class PauseMenu : MonoBehaviour
     private float _savedMasterSlider;
     private float _savedMusicSlider;
     private float _savedSfxSlider;
-    
-    private void Start()
+
+    public void Init()
     {
         _savedMasterSlider = PlayerPrefs.GetFloat("MasterVol", 1f);
         _savedMusicSlider = PlayerPrefs.GetFloat("MusicVol", 1f);
@@ -36,8 +36,6 @@ public class PauseMenu : MonoBehaviour
         SetMasterVolume(_savedMasterSlider);
         SetMusicVolume(_savedMusicSlider);
         SetSfxVolume(_savedSfxSlider);
-
-        gameObject.SetActive(false);
     }
 
     public void SetMasterVolume(float sliderVal)

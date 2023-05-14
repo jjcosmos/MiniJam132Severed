@@ -70,6 +70,8 @@ public class Game : MonoBehaviour
             // Play Zone Sfx
             
             // Play new zone music if not null
+            if(_currentZone.CustomMusic)
+                PersistantMusicMan.SetMusic(_currentZone.CustomMusic);
         }
     }
 }

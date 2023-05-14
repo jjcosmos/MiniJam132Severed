@@ -1,14 +1,24 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviour
 {
     [SerializeField] private Animator _blackoutAnim;
     [SerializeField] private CanvasGroup _mainGroup;
     [SerializeField] private GameObject _settingsMenu;
-    
+    [SerializeField] private Button _firstSelection;
+    [SerializeField] private AudioClip _mainMenuMusic;
+
+    private void Start()
+    {
+        _settingsMenu.GetComponent<PauseMenu>().Init();
+        PersistantMusicMan.SetMusic(_mainMenuMusic);
+    }
+
     public void LoadMainScene()
     {
         _blackoutAnim.SetTrigger("tToBlack");
@@ -25,6 +35,7 @@ public class MainMenu : MonoBehaviour
     {
         _settingsMenu.SetActive(false);
         _mainGroup.interactable = true;
+        _firstSelection.Select();
     }
 
     private IEnumerator LoadSceneRoutine()
