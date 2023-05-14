@@ -9,6 +9,8 @@ public class Game : MonoBehaviour
     [SerializeField] private Animator _zoneTextAnimator;
     [SerializeField] private TMP_Text _zoneText;
     [SerializeField] private PlayableDirector _endPlayable;
+    [SerializeField] private AudioClip _newAreaClip;
+    [SerializeField] private AudioSource _src;
     
     private Character _character;
     private NamedZone _currentZone;
@@ -68,6 +70,7 @@ public class Game : MonoBehaviour
             _currentZone = _queuedZone;
             
             // Play Zone Sfx
+            _src.PlayOneShot(_newAreaClip);
             
             // Play new zone music if not null
             if(_currentZone.CustomMusic)

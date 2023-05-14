@@ -16,6 +16,14 @@ public class Character : MonoBehaviour
     [SerializeField] private float _horizontalForce = 5f;
     [SerializeField] private Animator _animator;
     [SerializeField] private Transform _groundcastPoint;
+    
+    [SerializeField] private AudioSource _src;
+    [SerializeField] private AudioSource _slideSrc;
+    [SerializeField] private float _maxSlideVolume = 0.5f;
+    [SerializeField] private float _moveSfxVolume = 0.5f;
+    [SerializeField] private AudioClip _jumpClip;
+    [SerializeField] private AudioClip _landClip;
+    [SerializeField] private AudioClip _hitClip;
 
     private readonly int _bInAirHash = Animator.StringToHash("bInAir");
     private readonly int _bHoldingJump = Animator.StringToHash("bHoldingJump");
@@ -48,6 +56,9 @@ public class Character : MonoBehaviour
         MoveFromInput();
         
         _animator.SetBool(_bInAirHash, _inAirThisFrame || _onSlopeThisFrame);
+
+        _slideSrc.volume = Mathf.MoveTowards(_slideSrc.volume, _onSlopeThisFrame ? _maxSlideVolume : 0f,
+            Time.deltaTime * (_onSlopeThisFrame ? 2f : 3f));
     }
 
     private void FixedUpdate()
@@ -84,12 +95,15 @@ public class Character : MonoBehaviour
             var dirVec = new Vector3( Mathf.Clamp(Mathf.RoundToInt(hAxis), -1f, 1f), 0, 0);
             _body.velocity = _jumpCharge *( (Vector3.up * _jumpForce) + (_horizontalForce * dirVec.normalized));
             _jumpCharge = 0f;
+            
+            _src.PlayOneShot(_jumpClip, _moveSfxVolume);
         }
     }
 
     private void CheckState()
     {
         var wasOnSlope = _onSlopeThisFrame;
+        var wasInAir = _inAirThisFrame;
         if (_body.velocity.y <= 0 && GroundCheck(out var hitInfo))
         {
             _onSlopeThisFrame = NormalIsSlope(hitInfo.normal);
@@ -117,6 +131,11 @@ public class Character : MonoBehaviour
         if (!wasOnSlope && _onSlopeThisFrame)
         {
             _body.velocity = Vector3.zero;
+        }
+
+        if (!_inAirThisFrame && wasInAir)
+        {
+            _src.PlayOneShot(_landClip, _moveSfxVolume);
         }
     }
 
@@ -176,14 +195,9 @@ public class Character : MonoBehaviour
         {
             _body.velocity = Vector3.zero;
         }
-        else if (collision.relativeVelocity.y < 0f)
-        {
-            //_body.velocity = Vector3.Scale(new Vector3(1f, 0f, 1f), _body.velocity);
-        }
         else
         {
-            //Debug.Log($"Failed to resolve, Grounded: {isGround} Flat: {onFlatGround} RelVel {collision.relativeVelocity.y}");
-            //Debug.Break();
+            _src.PlayOneShot(_hitClip, _moveSfxVolume);
         }
     }
 
