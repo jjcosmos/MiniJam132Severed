@@ -2,23 +2,24 @@
 
 public class PauseListener : MonoBehaviour
 {
-    [SerializeField] private GameObject _pauseMenu;
+    [SerializeField] private PauseMenu _pauseMenu;
     
     private void Update()
     {
         if (Input.GetButtonDown("Pause"))
         {
-            var isPaused = _pauseMenu.activeInHierarchy;
+            var isPaused = _pauseMenu.gameObject.activeInHierarchy;
 
             if (isPaused)
             {
                 Time.timeScale = 1;
-                _pauseMenu.SetActive(false);
+                _pauseMenu.gameObject.SetActive(false);
             }
             else
             {
+                _pauseMenu.Init();
                 Time.timeScale = 0f;
-                _pauseMenu.SetActive(true);
+                _pauseMenu.gameObject.SetActive(true);
             }
         }
     }

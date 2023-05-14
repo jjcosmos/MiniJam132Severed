@@ -19,8 +19,12 @@ public class PauseMenu : MonoBehaviour
     private float _savedMusicSlider;
     private float _savedSfxSlider;
 
+    private bool _initialized;
+
     public void Init()
     {
+        if (_initialized) return;
+        
         _savedMasterSlider = PlayerPrefs.GetFloat("MasterVol", 1f);
         _savedMusicSlider = PlayerPrefs.GetFloat("MusicVol", 1f);
         _savedSfxSlider = PlayerPrefs.GetFloat("SfxVol", 1f);
@@ -36,6 +40,8 @@ public class PauseMenu : MonoBehaviour
         SetMasterVolume(_savedMasterSlider);
         SetMusicVolume(_savedMusicSlider);
         SetSfxVolume(_savedSfxSlider);
+
+        _initialized = true;
     }
 
     public void SetMasterVolume(float sliderVal)
@@ -66,6 +72,7 @@ public class PauseMenu : MonoBehaviour
 
     private void OnDisable()
     {
+        Time.timeScale = 1;
         PlayerPrefs.SetFloat("MasterVol", _savedMasterSlider);
         PlayerPrefs.SetFloat("MusicVol", _savedMusicSlider);
         PlayerPrefs.SetFloat("SfxVol", _savedSfxSlider);
