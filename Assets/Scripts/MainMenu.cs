@@ -12,6 +12,8 @@ public class MainMenu : MonoBehaviour
     [SerializeField] private GameObject _settingsMenu;
     [SerializeField] private Button _firstSelection;
     [SerializeField] private AudioClip _mainMenuMusic;
+    [SerializeField] private AudioSource _src;
+    [SerializeField] private AudioClip _startClip;
 
     private void Start()
     {
@@ -21,6 +23,7 @@ public class MainMenu : MonoBehaviour
 
     public void LoadMainScene()
     {
+        _src.PlayOneShot(_startClip);
         _blackoutAnim.SetTrigger("tToBlack");
         StartCoroutine(LoadSceneRoutine());
     }
