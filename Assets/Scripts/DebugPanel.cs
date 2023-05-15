@@ -19,6 +19,8 @@ namespace DefaultNamespace
 
         private void OnGUI()
         {
+            return;
+            
             _stringToEdit = GUILayout.TextField(_stringToEdit, 32);
             if (GUILayout.Button("GoTo"))
             {

@@ -19,11 +19,15 @@ public class Character : MonoBehaviour
     
     [SerializeField] private AudioSource _src;
     [SerializeField] private AudioSource _slideSrc;
+    [SerializeField] private AudioSource _jumpSrc;
     [SerializeField] private float _maxSlideVolume = 0.5f;
     [SerializeField] private float _moveSfxVolume = 0.5f;
     [SerializeField] private AudioClip _jumpClip;
     [SerializeField] private AudioClip _landClip;
     [SerializeField] private AudioClip _hitClip;
+
+    [SerializeField] private ParticleSystem _jumpParticles;
+    [SerializeField] private ParticleSystem _slideParticles;
 
     private readonly int _bInAirHash = Animator.StringToHash("bInAir");
     private readonly int _bHoldingJump = Animator.StringToHash("bHoldingJump");
@@ -59,6 +63,15 @@ public class Character : MonoBehaviour
 
         _slideSrc.volume = Mathf.MoveTowards(_slideSrc.volume, _onSlopeThisFrame ? _maxSlideVolume : 0f,
             Time.deltaTime * (_onSlopeThisFrame ? 2f : 3f));
+
+        if (_onSlopeThisFrame && !_slideParticles.isPlaying)
+        {
+            _slideParticles.Play();
+        }
+        else if (!_onSlopeThisFrame && _slideParticles.isPlaying)
+        {
+            _slideParticles.Stop();
+        }
     }
 
     private void FixedUpdate()
@@ -92,11 +105,13 @@ public class Character : MonoBehaviour
 
         if (!_inAirThisFrame && !_onSlopeThisFrame && Input.GetButtonUp("Jump"))
         {
+            _jumpParticles.Play();
+            _jumpSrc.PlayOneShot(_jumpClip, _moveSfxVolume * _jumpCharge);
+            
             var dirVec = new Vector3( Mathf.Clamp(Mathf.RoundToInt(hAxis), -1f, 1f), 0, 0);
             _body.velocity = _jumpCharge *( (Vector3.up * _jumpForce) + (_horizontalForce * dirVec.normalized));
             _jumpCharge = 0f;
             
-            _src.PlayOneShot(_jumpClip, _moveSfxVolume);
         }
     }
 
@@ -136,6 +151,7 @@ public class Character : MonoBehaviour
         if (!_inAirThisFrame && wasInAir)
         {
             _src.PlayOneShot(_landClip, _moveSfxVolume);
+            _jumpParticles.Play();
         }
     }
 

@@ -44,7 +44,7 @@ public class MainMenu : MonoBehaviour
     private IEnumerator LoadSceneRoutine()
     {
         _mainGroup.interactable = false;
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(1.5f);
         SceneManager.LoadScene("Gameplay");
     }
 }
